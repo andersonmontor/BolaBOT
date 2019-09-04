@@ -57,6 +57,8 @@ for line in f.readlines():
 		config_key = line.split('=')[0]
 		config_value = line.split('=')[1].split(',')
 		configs[config_key] = config_value
+		if '' in configs[config_key]:
+			configs[config_key].remove('')
 f.close()
 
 for entry in CONFIG_LIST:
@@ -115,6 +117,11 @@ def handle_messages(message):
 	#Pra não ficar floodando o canal enquanto estivermos testando
 	if (message.chat.type != "private") and args.private_only:
 		return
+		
+	#Guarda o user numa lista pra ser usado no comando !user
+	if message.from_user.username not in configs["users"] and not message.from_user.is_bot:
+		configs["users"].append(message.from_user.username)
+		
 
 	print_verbose("%s: %s" % (message.from_user.username, message.text))
 	command = None
@@ -138,7 +145,7 @@ def handle_messages(message):
 		if len(alternativas) > 1:
 			bot.send_message(message.chat.id, obv(random.choice(alternativas).capitalize()))
 	
-	if texto.startswith('@' + bot.get_me().username) or command == "bola":
+	if ('@' + bot.get_me().username) in texto or command == "bola":
 		if ("update" in texto.split()) and admin_rights:
 			bot.send_message(message.chat.id, "Fazendo update!")
 			subprocess.call("git pull origin master", shell = True)
@@ -148,7 +155,7 @@ def handle_messages(message):
 			bot.send_message(message.chat.id, obv(random.choice(("Sim", "Não"))))
 	
 	if command == "user" and message.chat.type != "private" and configs["users"] != ['']:
-		bot.send_message(message.chat.id, obv(random.choice(configs["users"])))
+		bot.send_message(message.chat.id, '@' + obv(random.choice(configs["users"])))
 	
 	if (command == "w" or command == "weather") and configs["weather_api"] != ['']:
 		bot.send_message(message.chat.id, get_weather(texto))
@@ -183,8 +190,8 @@ def callback_handler(call):
 
 bot.skip_pending = True
 print_verbose("Iniciando: %s" % sys.argv)
-if (configs["main_group_id"][0] != ['']) and not args.private_only:
-	bot.send_message(int(configs["main_group_id"][0]), "%s online! MD5 atual: %s" % (bot.get_me().username, checksum(sys.argv[0])))
+#if (configs["main_group_id"][0] != ['']) and not args.private_only:
+	#bot.send_message(int(configs["main_group_id"][0]), "%s online! MD5 atual: %s" % (bot.get_me().username, checksum(sys.argv[0])))
 bot.polling()
 
 if updating:
