@@ -122,6 +122,11 @@ def handle_messages(message):
 	if message.from_user.username not in configs["users"] and not message.from_user.is_bot:
 		configs["users"].append(message.from_user.username)
 		
+	nome_grupo = 'private'
+	if message.chat.type != "private":
+		nome_grupo = message.chat.title
+	print ('%s(%s): %s' % (message.from_user.username, nome_grupo, message.text))
+		
 
 	print_verbose("%s: %s" % (message.from_user.username, message.text))
 	command = None
